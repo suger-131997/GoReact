@@ -1,0 +1,10 @@
+.idea
+
+node_modules
+
+assets/output.css
+
+.output
+gen/gen.go
+
+tmp

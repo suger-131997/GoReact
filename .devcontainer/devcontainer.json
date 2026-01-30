@@ -1,0 +1,19 @@
+{
+  "name": "goreact",
+  "image": "mcr.microsoft.com/vscode/devcontainers/go:1.25-bookworm",
+  "workspaceFolder": "/workspace",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind",
+  "mounts": [
+    "source=${localWorkspaceFolderBasename}-node-modules,target=${containerWorkspaceFolder}/node_modules,type=volume"
+  ],
+  "forwardPorts": [8080],
+  "postCreateCommand": "sudo chown -R vscode:vscode ./node_modules && npm install",
+  "features": {
+    "ghcr.io/devcontainers/features/git:1": {
+      "version": "latest"
+    },
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "lts"
+    }
+  }
+}
