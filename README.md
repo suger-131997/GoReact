@@ -17,6 +17,7 @@ Designed as a proof-of-concept for a technical blog post, it explores methods to
    ```bash
    go mod download
    npm install
+   go install github.com/air-verse/air@latest
    ```
 
 2. **Start Development Server**
