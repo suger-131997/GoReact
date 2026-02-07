@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"goreact/internal/handler"
-	"goreact/internal/mark"
 	"net/http"
 	"strconv"
 )
@@ -20,8 +19,6 @@ type User struct {
 	Email string `json:"email"`
 	Role  string `json:"role"`
 }
-
-var _ mark.Props[UsersProps]
 
 func NewUsersHandler() *handler.PageHandler[UsersProps] {
 	return handler.NewPageHandler(handler.PageHandlerArgs[UsersProps]{

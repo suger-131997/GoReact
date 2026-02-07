@@ -15,6 +15,9 @@ export type LoggedProps = {
   message: string;
 }
 
+export type LoginProps = {
+}
+
 export type NotFoundProps = {
   path: string;
 }

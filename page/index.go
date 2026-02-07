@@ -4,15 +4,12 @@ import (
 	"context"
 	"goreact/internal/contextutil"
 	"goreact/internal/handler"
-	"goreact/internal/mark"
 	"net/http"
 )
 
 type IndexProps struct {
 	Name string `json:"name"`
 }
-
-var _ mark.Props[IndexProps]
 
 func NewIndexHandler() *handler.PageHandler[IndexProps] {
 	return handler.NewPageHandler(handler.PageHandlerArgs[IndexProps]{

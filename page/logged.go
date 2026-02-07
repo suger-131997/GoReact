@@ -3,15 +3,12 @@ package page
 import (
 	"context"
 	"goreact/internal/handler"
-	"goreact/internal/mark"
 	"net/http"
 )
 
 type LoggedProps struct {
 	Message string `json:"message"`
 }
-
-var _ mark.Props[LoggedProps]
 
 func NewLoggedHandler() *handler.PageHandler[LoggedProps] {
 	return handler.NewPageHandler(handler.PageHandlerArgs[LoggedProps]{

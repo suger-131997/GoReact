@@ -4,15 +4,12 @@ import (
 	"context"
 	"goreact/internal/contextutil"
 	"goreact/internal/handler"
-	"goreact/internal/mark"
 	"net/http"
 )
 
 type NotFoundProps struct {
 	Path string `json:"path"`
 }
-
-var _ mark.Props[NotFoundProps]
 
 func NewNotFoundHandler() *handler.PageHandler[NotFoundProps] {
 	return handler.NewPageHandler(handler.PageHandlerArgs[NotFoundProps]{

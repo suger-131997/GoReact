@@ -53,47 +53,42 @@ func processFile(path string) (string, error) {
 		return "", err
 	}
 
-	// 1. Find the struct names marked with var _ mark.Props[T]
+	// 1. Find the struct names from *handler.PageHandler[T] constructors
 	targetStructs := make(map[string]bool)
 	ast.Inspect(node, func(n ast.Node) bool {
-		gd, ok := n.(*ast.GenDecl)
-		if !ok || gd.Tok != token.VAR {
+		fd, ok := n.(*ast.FuncDecl)
+		if !ok || fd.Type.Results == nil || len(fd.Type.Results.List) == 0 {
 			return true
 		}
 
-		for _, spec := range gd.Specs {
-			vs, ok := spec.(*ast.ValueSpec)
-			if !ok {
-				continue
-			}
-
-			// Check for _
-			if len(vs.Names) != 1 || vs.Names[0].Name != "_" {
-				continue
-			}
-
-			// Check for mark.Props[T]
-			idxExpr, ok := vs.Type.(*ast.IndexExpr)
-			if !ok {
-				continue
-			}
-
-			selExpr, ok := idxExpr.X.(*ast.SelectorExpr)
-			if !ok {
-				continue
-			}
-
-			xIdent, ok := selExpr.X.(*ast.Ident)
-			if !ok || xIdent.Name != "mark" || selExpr.Sel.Name != "Props" {
-				continue
-			}
-
-			// Get T
-			tIdent, ok := idxExpr.Index.(*ast.Ident)
-			if ok {
-				targetStructs[tIdent.Name] = true
-			}
+		// Check return type: *handler.PageHandler[T]
+		retType := fd.Type.Results.List[0].Type
+		starExpr, ok := retType.(*ast.StarExpr)
+		if !ok {
+			return true
 		}
+
+		idxExpr, ok := starExpr.X.(*ast.IndexExpr)
+		if !ok {
+			return true
+		}
+
+		selExpr, ok := idxExpr.X.(*ast.SelectorExpr)
+		if !ok {
+			return true
+		}
+
+		xIdent, ok := selExpr.X.(*ast.Ident)
+		if !ok || xIdent.Name != "handler" || selExpr.Sel.Name != "PageHandler" {
+			return true
+		}
+
+		// Get T
+		tIdent, ok := idxExpr.Index.(*ast.Ident)
+		if ok {
+			targetStructs[tIdent.Name] = true
+		}
+
 		return true
 	})
 

@@ -3,14 +3,11 @@ package page
 import (
 	"context"
 	"goreact/internal/handler"
-	"goreact/internal/mark"
 	"net/http"
 )
 
 type CalendarProps struct {
 }
-
-var _ mark.Props[CalendarProps]
 
 func NewCalendarHandler() *handler.PageHandler[CalendarProps] {
 	return handler.NewPageHandler(handler.PageHandlerArgs[CalendarProps]{
