@@ -79,7 +79,7 @@ func (b *Builder) Build(entryPoint string) (string, error) {
 			fileLocation = result.Errors[0].Location.File
 			lineNum = result.Errors[0].Location.LineText
 		}
-		return "", fmt.Errorf("%s <br>in %s <br>at %s", result.Errors[0].Text, fileLocation, lineNum)
+		return "", fmt.Errorf("%s in %s at %s", result.Errors[0].Text, fileLocation, lineNum)
 	}
 
 	return string(result.OutputFiles[0].Contents), nil
