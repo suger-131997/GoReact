@@ -5,6 +5,7 @@ import {
   IconUserCheck,
   IconCalendar,
   IconTable,
+  IconListCheck,
 } from "@tabler/icons-react"
 
 const Sidebar = () => {
@@ -13,6 +14,7 @@ const Sidebar = () => {
     { name: "About", path: "/about", icon: IconInfoCircle },
     { name: "Calendar", path: "/calendar", icon: IconCalendar },
     { name: "Users", path: "/users", icon: IconTable },
+    { name: "Todo", path: "/todo", icon: IconListCheck },
     { name: "Login", path: "/login", icon: IconLogin },
     { name: "Logged In", path: "/logged", icon: IconUserCheck },
   ]

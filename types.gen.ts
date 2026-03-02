@@ -22,6 +22,16 @@ export type NotFoundProps = {
   path: string;
 }
 
+export type TodoProps = {
+  initialTodos: TodoItem[];
+}
+
+export type TodoItem = {
+  id: number;
+  text: string;
+  completed: boolean;
+}
+
 export type UsersProps = {
   users: User[];
   totalCount: number;

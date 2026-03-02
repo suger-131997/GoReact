@@ -33,6 +33,7 @@ func NewRouter(renderer *render.CoreRenderer) *http.ServeMux {
 	mux.HandleFunc("/about", page.NewAboutHandler().Handler(renderer))
 	mux.HandleFunc("/calendar", page.NewCalendarHandler().Handler(renderer))
 	mux.HandleFunc("/users", page.NewUsersHandler().Handler(renderer))
+	mux.HandleFunc("/todo", page.NewTodoHandler().Handler(renderer))
 	mux.Handle("/logged", middleware.AuthMiddleware(page.NewLoggedHandler().Handler(renderer)))
 
 	mux.HandleFunc("POST /api/login", api.LoginHandler)
