@@ -14,6 +14,7 @@ Designed as a proof-of-concept for a technical blog post, it explores methods to
 ### Installation
 
 1. **Install Dependencies**
+
    ```bash
    go mod download
    npm install
@@ -21,9 +22,11 @@ Designed as a proof-of-concept for a technical blog post, it explores methods to
    ```
 
 2. **Start Development Server**
+
    ```bash
    make dev
    ```
+
    The server will be available at `http://localhost:3000`.
 
 3. **Build and Run for Production**

@@ -2,59 +2,42 @@ package builder
 
 import (
 	"bytes"
+	_ "embed"
 	"fmt"
 	"html/template"
-
-	esbuild "github.com/evanw/esbuild/pkg/api"
+	"os/exec"
 )
 
-type Builder struct {
-	baseOptions esbuild.BuildOptions
+//go:embed bundle.ts
+var bundleTS string
 
+type Builder struct {
 	rootTmpl *template.Template
+	envs     []string
 }
 
 func NewDevBuilder() *Builder {
 	return &Builder{
-		baseOptions: esbuild.BuildOptions{
-			Bundle:            true,
-			Write:             false,
-			Tsconfig:          "./tsconfig.json",
-			MinifyWhitespace:  false,
-			MinifyIdentifiers: false,
-			MinifySyntax:      false,
-			Sourcemap:         esbuild.SourceMapInline,
-			Define: map[string]string{
-				"process.env.NODE_ENV": "\"development\"",
-			},
-		},
 		rootTmpl: template.Must(template.New("root").Parse(rootTemplate)),
+		envs: []string{
+			"NODE_ENV=development",
+		},
 	}
 }
 
 func NewProdBuilder() *Builder {
 	return &Builder{
-		baseOptions: esbuild.BuildOptions{
-			Bundle:            true,
-			Write:             false,
-			Tsconfig:          "./tsconfig.json",
-			MinifyWhitespace:  true,
-			MinifyIdentifiers: true,
-			MinifySyntax:      true,
-			Sourcemap:         esbuild.SourceMapNone,
-			Define: map[string]string{
-				"process.env.NODE_ENV": "\"production\"",
-			},
-		},
 		rootTmpl: template.Must(template.New("root").Parse(rootTemplate)),
+		envs: []string{
+			"NODE_ENV=production",
+		},
 	}
 }
 
-func (b *Builder) copyBaseOptions() esbuild.BuildOptions {
-	return b.baseOptions
-}
-
 func (b *Builder) Build(entryPoint string) (string, error) {
+	cmd := exec.Command("node", "-e", bundleTS)
+	cmd.Env = append(cmd.Env, b.envs...)
+
 	var buf bytes.Buffer
 	err := b.rootTmpl.Execute(&buf, map[string]interface{}{
 		"EntryPoint": entryPoint,
@@ -62,27 +45,20 @@ func (b *Builder) Build(entryPoint string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to execute template: %w", err)
 	}
+	cmd.Stdin = &buf
 
-	opt := b.copyBaseOptions()
-	opt.Stdin = &esbuild.StdinOptions{
-		Contents:   buf.String(),
-		ResolveDir: ".",
-		Loader:     esbuild.LoaderTSX,
+	var out bytes.Buffer
+	var stderr bytes.Buffer
+
+	cmd.Stdout = &out
+	cmd.Stderr = &stderr
+
+	err = cmd.Run()
+	if err != nil {
+		return "", fmt.Errorf("failed to run bundle.ts: %w, stderr: %s", err, stderr.String())
 	}
 
-	result := esbuild.Build(opt)
-
-	if len(result.Errors) > 0 {
-		fileLocation := "unknown"
-		lineNum := "unknown"
-		if result.Errors[0].Location != nil {
-			fileLocation = result.Errors[0].Location.File
-			lineNum = result.Errors[0].Location.LineText
-		}
-		return "", fmt.Errorf("%s in %s at %s", result.Errors[0].Text, fileLocation, lineNum)
-	}
-
-	return string(result.OutputFiles[0].Contents), nil
+	return out.String(), nil
 }
 
 const rootTemplate = `

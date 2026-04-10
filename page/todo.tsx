@@ -1,5 +1,5 @@
 import Layout from "~/components/Layout"
-import { useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 
 // ローカル型（types.gen.ts の自動生成を待たずに利用できるように）
 type TodoItem = {
@@ -24,7 +24,7 @@ const TodoPage = (props: TodoProps) => {
     return { total, done, remaining }
   }, [todos])
 
-  const addTodo = () => {
+  const addTodo = useCallback(() => {
     const trimmed = text.trim()
     if (!trimmed) return
     const nextId = (todos.at(-1)?.id ?? 0) + 1
@@ -33,7 +33,7 @@ const TodoPage = (props: TodoProps) => {
       { id: nextId, text: trimmed, completed: false },
     ])
     setText("")
-  }
+  }, [text, todos])
 
   const toggle = (id: number) => {
     setTodos((prev) =>
@@ -54,7 +54,7 @@ const TodoPage = (props: TodoProps) => {
     }
     window.addEventListener("keydown", onKey)
     return () => window.removeEventListener("keydown", onKey)
-  }, [text, todos])
+  }, [text, todos, addTodo])
 
   return (
     <Layout>
