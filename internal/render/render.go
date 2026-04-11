@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"goreact/internal/builder"
 	"goreact/internal/contextutil"
 	"html/template"
 )
@@ -11,6 +12,7 @@ import (
 type PageData struct {
 	Title    string
 	JS       template.JS
+	CSS      template.CSS
 	AppProps template.JS
 }
 
@@ -21,8 +23,8 @@ const htmlTemplate = `
     <meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<link rel="icon" type="image/svg+xml" href="/_assets/vite.svg" />
-    <link href="/_assets/output.css" rel="stylesheet">
     <title>{{ .Title }}</title>
+	<style>{{ .CSS }}</style>
 </head>
 <body>
     <div id="root"></div>
@@ -35,17 +37,17 @@ const htmlTemplate = `
 type CoreRenderer struct {
 	tmpl *template.Template
 
-	jsf func(entryPoint string) func() (string, error)
+	jsf func(entryPoint string) func() (builder.BuildResult, error)
 }
 
-func NewCoreRenderer(jsf func(entryPoint string) func() (string, error)) *CoreRenderer {
+func NewCoreRenderer(jsf func(entryPoint string) func() (builder.BuildResult, error)) *CoreRenderer {
 	return &CoreRenderer{tmpl: template.Must(template.New("html").Parse(htmlTemplate)), jsf: jsf}
 }
 
 type Renderer[T any] struct {
 	renderer *CoreRenderer
 
-	js func() (string, error)
+	js func() (builder.BuildResult, error)
 }
 
 func NewRenderer[T any](renderer *CoreRenderer, entryPoint string) *Renderer[T] {
@@ -67,7 +69,8 @@ func (r *Renderer[T]) Render(ctx context.Context, props T) ([]byte, error) {
 
 	data := PageData{
 		Title:    title,
-		JS:       template.JS(js),
+		JS:       template.JS(js.JS),
+		CSS:      template.CSS(js.CSS),
 		AppProps: template.JS(propsJson),
 	}
 

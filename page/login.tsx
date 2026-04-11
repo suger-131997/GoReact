@@ -1,6 +1,14 @@
 import { useForm } from "@tanstack/react-form"
 import { useMutation } from "@tanstack/react-query"
 import Layout from "~/components/Layout"
+import {
+  TextInput,
+  PasswordInput,
+  Button,
+  Paper,
+  Title,
+  Container,
+} from "@mantine/core"
 
 const LoginPage = () => {
   const loginMutation = useMutation({
@@ -44,17 +52,18 @@ const LoginPage = () => {
 
   return (
     <Layout>
-      <div className="container mx-auto flex flex-col items-center">
-        <h1 className="mb-4 text-2xl font-bold">Login</h1>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault()
-            e.stopPropagation()
-            form.handleSubmit()
-          }}
-          className="mb-4 w-full max-w-sm rounded border border-gray-200 bg-white px-8 pt-6 pb-8 shadow-md"
-        >
-          <div className="mb-4">
+      <Container size="xs">
+        <Title order={1} mb="md" ta="center">
+          Login
+        </Title>
+        <Paper withBorder shadow="md" p={30} mt={30} radius="md">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              form.handleSubmit()
+            }}
+          >
             <form.Field
               name="username"
               validators={{
@@ -62,32 +71,24 @@ const LoginPage = () => {
                   !value ? "Username is required" : undefined,
               }}
               children={(field) => (
-                <>
-                  <label
-                    htmlFor={field.name}
-                    className="mb-2 block text-sm font-bold text-gray-700"
-                  >
-                    Username:
-                  </label>
-                  <input
-                    id={field.name}
-                    name={field.name}
-                    value={field.state.value}
-                    onBlur={field.handleBlur}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    className="focus:shadow-outline w-full appearance-none rounded border px-3 py-2 leading-tight text-gray-700 shadow focus:outline-none"
-                  />
-                  {field.state.meta.isTouched &&
-                  field.state.meta.errors.length ? (
-                    <em className="text-xs text-red-500 italic">
-                      {field.state.meta.errors.join(", ")}
-                    </em>
-                  ) : null}
-                </>
+                <TextInput
+                  label="Username"
+                  placeholder="Your username"
+                  id={field.name}
+                  name={field.name}
+                  value={field.state.value}
+                  onBlur={field.handleBlur}
+                  onChange={(e) => field.handleChange(e.target.value)}
+                  error={
+                    field.state.meta.isTouched &&
+                    field.state.meta.errors.length > 0
+                      ? field.state.meta.errors.join(", ")
+                      : undefined
+                  }
+                  required
+                />
               )}
-            ></form.Field>
-          </div>
-          <div className="mb-6">
+            />
             <form.Field
               name="password"
               validators={{
@@ -99,48 +100,42 @@ const LoginPage = () => {
                       : undefined,
               }}
               children={(field) => (
-                <>
-                  <label
-                    htmlFor={field.name}
-                    className="mb-2 block text-sm font-bold text-gray-700"
-                  >
-                    Password:
-                  </label>
-                  <input
-                    id={field.name}
-                    name={field.name}
-                    type="password"
-                    value={field.state.value}
-                    onBlur={field.handleBlur}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    className="focus:shadow-outline mb-3 w-full appearance-none rounded border px-3 py-2 leading-tight text-gray-700 shadow focus:outline-none"
-                  />
-                  {field.state.meta.isTouched &&
-                  field.state.meta.errors.length ? (
-                    <em className="text-xs text-red-500 italic">
-                      {field.state.meta.errors.join(", ")}
-                    </em>
-                  ) : null}
-                </>
+                <PasswordInput
+                  label="Password"
+                  placeholder="Your password"
+                  id={field.name}
+                  name={field.name}
+                  value={field.state.value}
+                  onBlur={field.handleBlur}
+                  onChange={(e) => field.handleChange(e.target.value)}
+                  error={
+                    field.state.meta.isTouched &&
+                    field.state.meta.errors.length > 0
+                      ? field.state.meta.errors.join(", ")
+                      : undefined
+                  }
+                  required
+                  mt="md"
+                />
               )}
             />
-          </div>
-          <div className="flex items-center justify-between">
             <form.Subscribe
               selector={(state) => [state.canSubmit]}
               children={([canSubmit]) => (
-                <button
+                <Button
+                  fullWidth
+                  mt="xl"
                   type="submit"
                   disabled={!canSubmit || loginMutation.isPending}
-                  className="focus:shadow-outline rounded bg-blue-500 px-4 py-2 font-bold text-white hover:bg-blue-700 focus:outline-none disabled:opacity-50"
+                  loading={loginMutation.isPending}
                 >
-                  {loginMutation.isPending ? "..." : "Login"}
-                </button>
+                  Login
+                </Button>
               )}
             />
-          </div>
-        </form>
-      </div>
+          </form>
+        </Paper>
+      </Container>
     </Layout>
   )
 }

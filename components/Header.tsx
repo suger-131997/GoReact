@@ -1,11 +1,14 @@
+import { Group, Text, Box } from "@mantine/core"
+
 const Header = () => {
   return (
-    <header className="bg-gray-800 p-4 text-white">
-      <nav className="container mx-auto flex items-center justify-between">
-        <div className="text-xl font-bold">GoReact App</div>
-        <span />
-      </nav>
-    </header>
+    <Box p="md" bg="dark.7" style={{ height: "100%" }}>
+      <Group justify="space-between" align="center" style={{ height: "100%" }}>
+        <Text size="xl" fw={700} c="white">
+          GoReact App
+        </Text>
+      </Group>
+    </Box>
   )
 }
 

@@ -1,3 +1,4 @@
+import { NavLink, Stack } from "@mantine/core"
 import {
   IconHome,
   IconInfoCircle,
@@ -19,24 +20,21 @@ const Sidebar = () => {
     { name: "Logged In", path: "/logged", icon: IconUserCheck },
   ]
 
+  const currentPath = window.location.pathname
+
   return (
-    <aside className="min-h-screen w-64 border-r border-gray-200 bg-gray-100 p-4">
-      <nav>
-        <ul className="space-y-2">
-          {links.map((link) => (
-            <li key={link.path}>
-              <a
-                href={link.path}
-                className="flex items-center gap-2 rounded p-2 font-medium text-gray-700 hover:bg-gray-200"
-              >
-                <link.icon size={20} />
-                <span>{link.name}</span>
-              </a>
-            </li>
-          ))}
-        </ul>
-      </nav>
-    </aside>
+    <Stack gap="xs">
+      {links.map((link) => (
+        <NavLink
+          key={link.path}
+          href={link.path}
+          label={link.name}
+          leftSection={<link.icon size={20} stroke={1.5} />}
+          active={currentPath === link.path}
+          variant="filled"
+        />
+      ))}
+    </Stack>
   )
 }
 

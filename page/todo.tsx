@@ -1,5 +1,17 @@
 import Layout from "~/components/Layout"
 import { useEffect, useMemo, useState } from "react"
+import {
+  Container,
+  Title,
+  TextInput,
+  Button,
+  Group,
+  Checkbox,
+  ActionIcon,
+  Text,
+  Paper,
+} from "@mantine/core"
+import { IconTrash } from "@tabler/icons-react"
 
 // ローカル型（types.gen.ts の自動生成を待たずに利用できるように）
 type TodoItem = {
@@ -58,60 +70,62 @@ const TodoPage = (props: TodoProps) => {
 
   return (
     <Layout>
-      <div className="mx-auto max-w-xl">
-        <h1 className="mb-4 text-2xl font-bold">Todo List</h1>
+      <Container size="sm">
+        <Title order={1} mb="md">
+          Todo List
+        </Title>
 
-        <div className="mb-4 flex gap-2">
-          <input
+        <Group mb="md">
+          <TextInput
             value={text}
             onChange={(e) => setText(e.target.value)}
             placeholder="Add a task..."
-            className="flex-1 rounded border px-3 py-2"
+            style={{ flex: 1 }}
           />
-          <button
-            onClick={addTodo}
-            className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
-          >
-            Add
-          </button>
-        </div>
+          <Button onClick={addTodo}>Add</Button>
+        </Group>
 
-        <ul className="space-y-2">
+        <Stack gap="sm">
           {todos.map((t) => (
-            <li
-              key={t.id}
-              className="flex items-center justify-between rounded border bg-white px-3 py-2"
-            >
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
+            <Paper key={t.id} withBorder p="xs" shadow="xs">
+              <Group justify="space-between">
+                <Checkbox
                   checked={t.completed}
                   onChange={() => toggle(t.id)}
+                  label={
+                    <Text
+                      style={{
+                        textDecoration: t.completed ? "line-through" : "none",
+                        color: t.completed
+                          ? "var(--mantine-color-dimmed)"
+                          : "inherit",
+                      }}
+                    >
+                      {t.text}
+                    </Text>
+                  }
                 />
-                <span
-                  className={t.completed ? "text-gray-500 line-through" : ""}
+                <ActionIcon
+                  variant="subtle"
+                  color="red"
+                  onClick={() => remove(t.id)}
+                  aria-label={`remove ${t.text}`}
                 >
-                  {t.text}
-                </span>
-              </label>
-              <button
-                onClick={() => remove(t.id)}
-                className="rounded px-2 py-1 text-sm text-red-600 hover:bg-red-50"
-                aria-label={`remove ${t.text}`}
-              >
-                Remove
-              </button>
-            </li>
+                  <IconTrash size={16} />
+                </ActionIcon>
+              </Group>
+            </Paper>
           ))}
-        </ul>
+        </Stack>
 
-        <div className="mt-4 text-sm text-gray-700">
+        <Text mt="md" size="sm" c="dimmed">
           Total: {stats.total} / Done: {stats.done} / Remaining:{" "}
           {stats.remaining}
-        </div>
-      </div>
+        </Text>
+      </Container>
     </Layout>
   )
 }
 
+import { Stack } from "@mantine/core"
 export default TodoPage

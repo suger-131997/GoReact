@@ -1,3 +1,4 @@
+import { MantineProvider, AppShell, Box } from "@mantine/core"
 import Header from "./Header"
 import Sidebar from "./Sidebar"
 
@@ -7,13 +8,28 @@ interface LayoutProps {
 
 const Layout = ({ children }: LayoutProps) => {
   return (
-    <div className="flex min-h-screen flex-col">
-      <Header />
-      <div className="flex flex-1">
-        <Sidebar />
-        <main className="flex-1 p-4">{children}</main>
-      </div>
-    </div>
+    <MantineProvider>
+      <AppShell
+        header={{ height: 60 }}
+        navbar={{
+          width: 300,
+          breakpoint: "sm",
+        }}
+        padding="md"
+      >
+        <AppShell.Header>
+          <Header />
+        </AppShell.Header>
+
+        <AppShell.Navbar p="md">
+          <Sidebar />
+        </AppShell.Navbar>
+
+        <AppShell.Main>
+          <Box>{children}</Box>
+        </AppShell.Main>
+      </AppShell>
+    </MantineProvider>
   )
 }
 

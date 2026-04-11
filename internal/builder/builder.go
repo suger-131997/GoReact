@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"html/template"
+	"strings"
 
 	esbuild "github.com/evanw/esbuild/pkg/api"
 )
@@ -54,16 +55,22 @@ func (b *Builder) copyBaseOptions() esbuild.BuildOptions {
 	return b.baseOptions
 }
 
-func (b *Builder) Build(entryPoint string) (string, error) {
+type BuildResult struct {
+	JS  string
+	CSS string
+}
+
+func (b *Builder) Build(entryPoint string) (BuildResult, error) {
 	var buf bytes.Buffer
 	err := b.rootTmpl.Execute(&buf, map[string]interface{}{
 		"EntryPoint": entryPoint,
 	})
 	if err != nil {
-		return "", fmt.Errorf("failed to execute template: %w", err)
+		return BuildResult{}, fmt.Errorf("failed to execute template: %w", err)
 	}
 
 	opt := b.copyBaseOptions()
+	opt.Outdir = "/tmp"
 	opt.Stdin = &esbuild.StdinOptions{
 		Contents:   buf.String(),
 		ResolveDir: ".",
@@ -79,13 +86,26 @@ func (b *Builder) Build(entryPoint string) (string, error) {
 			fileLocation = result.Errors[0].Location.File
 			lineNum = result.Errors[0].Location.LineText
 		}
-		return "", fmt.Errorf("%s in %s at %s", result.Errors[0].Text, fileLocation, lineNum)
+		return BuildResult{}, fmt.Errorf("%s in %s at %s", result.Errors[0].Text, fileLocation, lineNum)
 	}
 
-	return string(result.OutputFiles[0].Contents), nil
+	var br BuildResult
+	for _, file := range result.OutputFiles {
+		if strings.HasSuffix(file.Path, "stdin.js") {
+			br.JS = string(file.Contents)
+		} else if strings.HasSuffix(file.Path, "stdin.css") {
+			br.CSS = string(file.Contents)
+		}
+	}
+
+	return br, nil
 }
 
 const rootTemplate = `
+import "@mantine/core/styles.css"
+import "@schedule-x/theme-default/dist/index.css";
+import "~/global.css"
+
 import { StrictMode } from "react";
 import { createRoot } from 'react-dom/client'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'

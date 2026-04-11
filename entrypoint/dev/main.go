@@ -8,20 +8,20 @@ import (
 
 func main() {
 	b := builder.NewDevBuilder()
-	cache := make(map[string]string)
-	jsf := func(entryPoint string) func() (string, error) {
-		return func() (string, error) {
-			if js, ok := cache[entryPoint]; ok {
-				return js, nil
+	cache := make(map[string]builder.BuildResult)
+	jsf := func(entryPoint string) func() (builder.BuildResult, error) {
+		return func() (builder.BuildResult, error) {
+			if br, ok := cache[entryPoint]; ok {
+				return br, nil
 			}
 
-			js, err := b.Build(entryPoint)
+			br, err := b.Build(entryPoint)
 			if err != nil {
-				return "", err
+				return br, err
 			}
-			cache[entryPoint] = js
+			cache[entryPoint] = br
 
-			return js, nil
+			return br, nil
 		}
 	}
 

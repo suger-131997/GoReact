@@ -8,6 +8,7 @@ import {
 import { createEventsServicePlugin } from "@schedule-x/events-service"
 import Layout from "~/components/Layout"
 import "temporal-polyfill/global"
+import { Container, Title, Box } from "@mantine/core"
 
 const CalendarPage = () => {
   const eventsService = createEventsServicePlugin()
@@ -35,12 +36,14 @@ const CalendarPage = () => {
 
   return (
     <Layout>
-      <div className="container mx-auto">
-        <h1 className="mb-4 text-2xl font-bold">Calendar</h1>
-        <div>
+      <Container size="xl">
+        <Title order={1} mb="md">
+          Calendar
+        </Title>
+        <Box>
           <ScheduleXCalendar calendarApp={calendar} />
-        </div>
-      </div>
+        </Box>
+      </Container>
     </Layout>
   )
 }
