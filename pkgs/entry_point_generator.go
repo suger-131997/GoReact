@@ -1,6 +1,8 @@
 package pkgs
 
 import (
+	"context"
+	"errors"
 	"os"
 	"path"
 	"path/filepath"
@@ -8,19 +10,37 @@ import (
 )
 
 type EntryPointGenerator struct {
-	dir      string
+	workdir  string
 	rootTmpl *template.Template
 }
 
-func NewEntryPointGenerator(entryPointDir string) *EntryPointGenerator {
+func NewEntryPointGenerator(workdir string) *EntryPointGenerator {
 	return &EntryPointGenerator{
-		dir:      entryPointDir,
-		rootTmpl: template.Must(template.New("root").Parse(rootTemplate)),
+		workdir:  workdir,
+		rootTmpl: template.Must(template.New("root").Parse(entryPointTmpl)),
 	}
 }
 
+type EntryPointGeneratorContextKey struct{}
+
+func WithEntryPointGenerator(ctx context.Context, generator *EntryPointGenerator) context.Context {
+	return context.WithValue(ctx, EntryPointGeneratorContextKey{}, generator)
+}
+
+func EntryPointGeneratorFromContext(ctx context.Context) (*EntryPointGenerator, error) {
+	value := ctx.Value(EntryPointGeneratorContextKey{})
+	if value == nil {
+		return nil, errors.New("entry point generator not found in context")
+	}
+	generator, ok := value.(*EntryPointGenerator)
+	if !ok {
+		return nil, errors.New("invalid entry point generator type in context")
+	}
+	return generator, nil
+}
+
 func (r *EntryPointGenerator) Generate(entryPoint string) error {
-	p := filepath.Join(r.dir, entryPoint)
+	p := filepath.Join(r.workdir, entryPoint)
 
 	err := os.MkdirAll(path.Dir(p), os.ModePerm)
 	if err != nil {
@@ -43,7 +63,7 @@ func (r *EntryPointGenerator) Generate(entryPoint string) error {
 	return nil
 }
 
-const rootTemplate = `
+const entryPointTmpl = `
 import { StrictMode } from "react";
 import { createRoot } from 'react-dom/client'
 import App from '~/{{ .EntryPoint }}'

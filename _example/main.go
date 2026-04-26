@@ -1,9 +1,10 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	"goreact/_example/page"
 	"goreact/pkgs"
-	"html/template"
 	"log"
 	"net/http"
 	"os"
@@ -11,46 +12,44 @@ import (
 )
 
 type PageData struct {
-	Dev        bool
-	ViteServer string
-	EntryPoint string
-	Scripts    []string
-	Styles     []string
+	Dev           bool
+	ViteServer    string
+	EntryPointDir string
+	EntryPoint    string
+	Scripts       []string
+	Styles        []string
 }
 
 func main() {
 	viteServer := "http://localhost:5173"
+	workdir := "tmp"
 
-	tmpl := template.Must(template.New("index").Parse(htmlTemplate))
+	ctx := context.Background()
+
+	g := pkgs.NewEntryPointGenerator(workdir)
+
+	ctx = pkgs.WithEntryPointGenerator(ctx, g)
+
+	ctx, err := pkgs.WithRenderCreatorForDev(ctx, htmlDevTemplate, viteServer, workdir)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	mux := http.NewServeMux()
 
-	assets := http.FileServerFS(os.DirFS("."))
+	mux.Handle("/assets/", http.FileServerFS(os.DirFS(".")))
 
-	mux.Handle("/assets/", assets)
-
-	g := pkgs.NewEntryPointGenerator("tmp")
-
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/" || r.URL.Path == "/index.html" {
-			if err := g.Generate("page/App.tsx"); err != nil {
-				log.Fatal(err)
+	mux.HandleFunc("/", func() func(writer http.ResponseWriter, request *http.Request) {
+		indexHandler := page.NewAppHandler().Handler(ctx)
+		return func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Path == "/" || r.URL.Path == "/index.html" {
+				indexHandler(w, r)
+				return
 			}
 
-			data := PageData{
-				Dev:        true,
-				ViteServer: viteServer,
-				EntryPoint: "tmp/page/App.tsx",
-			}
-
-			w.Header().Set("Content-Type", "text/html")
-			tmpl.Execute(w, data)
-
-			return
+			http.ServeFileFS(w, r, os.DirFS("./public"), filepath.Base(r.URL.Path))
 		}
-
-		http.ServeFileFS(w, r, os.DirFS("./public"), filepath.Base(r.URL.Path))
-	})
+	}())
 
 	port := ":8080"
 	fmt.Printf("Server started at http://localhost%s\n", port)
@@ -81,7 +80,7 @@ const htmlTemplate = `
         window.__vite_plugin_react_preamble_installed__ = true
     </script>
     <script type="module" src="{{ .ViteServer }}/@vite/client"></script>
-    <script type="module" src="{{ .ViteServer }}/{{ .EntryPoint }}"></script>
+    <script type="module" src="{{ .ViteServer }}/{{ .EntryPointDir }}/{{ .EntryPoint }}"></script>
     {{ else }}
     <!-- 本番環境（ビルド済みアセット） -->
     {{ range .Styles }}
@@ -91,6 +90,30 @@ const htmlTemplate = `
     <script type="module" src="{{ . }}"></script>
     {{ end }}
     {{ end }}
+</head>
+<body>
+    <div id="root"></div>
+</body>
+</html>
+`
+
+const htmlDevTemplate = `
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vite + Go Integration</title>
+    <script type="module">
+        import RefreshRuntime from '{{ .ViteServer }}/@react-refresh'
+        RefreshRuntime.injectIntoGlobalHook(window)
+        window.$RefreshReg$ = () => {}
+        window.$RefreshSig$ = () => (type) => type
+        window.__vite_plugin_react_preamble_installed__ = true
+    </script>
+    <script type="module" src="{{ .ViteServer }}/@vite/client"></script>
+    <script type="module" src="{{ .ViteServer }}/{{ .EntryPointDir }}/{{ .EntryPoint }}"></script>
 </head>
 <body>
     <div id="root"></div>
