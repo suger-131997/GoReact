@@ -25,7 +25,7 @@ func main() {
 
 	assets := http.FileServerFS(os.DirFS("."))
 
-	mux.Handle("/src/assets/", assets)
+	mux.Handle("/assets/", assets)
 
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/" || r.URL.Path == "/index.html" {
@@ -72,7 +72,7 @@ const htmlTemplate = `
         window.__vite_plugin_react_preamble_installed__ = true
     </script>
     <script type="module" src="{{ .ViteServer }}/@vite/client"></script>
-    <script type="module" src="{{ .ViteServer }}/src/main.tsx"></script>
+    <script type="module" src="{{ .ViteServer }}/page/main.tsx"></script>
     {{ else }}
     <!-- 本番環境（ビルド済みアセット） -->
     {{ range .Styles }}
