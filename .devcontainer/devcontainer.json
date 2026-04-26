@@ -6,7 +6,7 @@
   "mounts": [
     "source=${localWorkspaceFolderBasename}-node-modules,target=${containerWorkspaceFolder}/node_modules,type=volume"
   ],
-  "forwardPorts": [8080],
+  "forwardPorts": [5173, 8080],
   "postCreateCommand": "sudo chown -R vscode:vscode ./node_modules && npm install",
   "features": {
     "ghcr.io/devcontainers/features/git:1": {
