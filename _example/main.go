@@ -24,6 +24,14 @@ func main() {
 	viteServer := "http://localhost:5173"
 	workdir := "tmp"
 
+	// Cleanup workdir
+	if err := os.RemoveAll(workdir); err != nil {
+		log.Fatal(err)
+	}
+	if err := os.MkdirAll(workdir, os.ModePerm); err != nil {
+		log.Fatal(err)
+	}
+
 	ctx := context.Background()
 
 	g := pkgs.NewEntryPointGenerator(workdir)
