@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"goreact/pkgs"
 	"html/template"
 	"log"
 	"net/http"
@@ -12,6 +13,7 @@ import (
 type PageData struct {
 	Dev        bool
 	ViteServer string
+	EntryPoint string
 	Scripts    []string
 	Styles     []string
 }
@@ -27,11 +29,18 @@ func main() {
 
 	mux.Handle("/assets/", assets)
 
+	g := pkgs.NewEntryPointGenerator("tmp")
+
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/" || r.URL.Path == "/index.html" {
+			if err := g.Generate("page/App.tsx"); err != nil {
+				log.Fatal(err)
+			}
+
 			data := PageData{
 				Dev:        true,
 				ViteServer: viteServer,
+				EntryPoint: "tmp/page/App.tsx",
 			}
 
 			w.Header().Set("Content-Type", "text/html")
@@ -72,7 +81,7 @@ const htmlTemplate = `
         window.__vite_plugin_react_preamble_installed__ = true
     </script>
     <script type="module" src="{{ .ViteServer }}/@vite/client"></script>
-    <script type="module" src="{{ .ViteServer }}/page/main.tsx"></script>
+    <script type="module" src="{{ .ViteServer }}/{{ .EntryPoint }}"></script>
     {{ else }}
     <!-- 本番環境（ビルド済みアセット） -->
     {{ range .Styles }}
