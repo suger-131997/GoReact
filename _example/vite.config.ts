@@ -2,7 +2,7 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
 import entriesConfig from './entries.gen.json'
-import { spawn } from 'child_process'
+import { spawn ,ChildProcess} from 'child_process'
 
 export default defineConfig({
   plugins: [
@@ -10,21 +10,15 @@ export default defineConfig({
     {
       name: 'run-go-server',
       configureServer(server) {
-        const projectRoot = path.resolve(__dirname, './')
-        let goProcess = spawn('go', ['run', './entrypoint/dev/main.go'], {
-          stdio: 'inherit',
-          cwd: projectRoot,
-          detached: true,
-        })
-        let isRestarting = false
-
         const startGoServer = () => spawn('go', ['run', './entrypoint/dev/main.go'], {
           stdio: 'inherit',
-          cwd: projectRoot,
           detached: true,
         })
 
-        const stopGoServer = (proc: any) => {
+        let goProcess = startGoServer()
+        let isRestarting = false
+
+        const stopGoServer = (proc: ChildProcess) => {
           if (proc.pid) {
             try {
               process.kill(-proc.pid, 'SIGTERM')
