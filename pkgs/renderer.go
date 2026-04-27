@@ -3,16 +3,10 @@ package pkgs
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"html/template"
 )
-
-type RendererCreator struct {
-}
-
-func (r *RendererCreator) Get(ctx context.Context, entryPoint string) Renderer {
-	return nil
-}
 
 type renderCreatorContextKey struct{}
 
@@ -47,14 +41,15 @@ type devRenderer struct {
 	htmlTemplate *template.Template
 
 	viteServer string
-	workDir    string
+	workdir    string
 }
 
 type devRendererData struct {
-	Dev           bool
-	ViteServer    string
-	EntryPointDir string
-	EntryPoint    string
+	AppProps   template.JS
+	Dev        bool
+	ViteServer string
+	Workdir    string
+	EntryPoint string
 }
 
 func newDevRendererFunc(htmlTemplate *template.Template, viteServer, workdir string) func(ctx context.Context, entryPoint string) (Renderer, error) {
@@ -73,22 +68,27 @@ func newDevRendererFunc(htmlTemplate *template.Template, viteServer, workdir str
 			entryPoint:   entryPoint,
 			htmlTemplate: htmlTemplate,
 			viteServer:   viteServer,
-			workDir:      workdir,
+			workdir:      workdir,
 		}, nil
 	}
 }
 
 func (d *devRenderer) Render(ctx context.Context, props any) ([]byte, error) {
+	propsJson, err := json.Marshal(props)
+	if err != nil {
+		return nil, err
+	}
+
 	data := devRendererData{
-		Dev:           true,
-		ViteServer:    d.viteServer,
-		EntryPointDir: d.workDir,
-		EntryPoint:    d.entryPoint,
+		AppProps:   template.JS(propsJson),
+		Dev:        true,
+		ViteServer: d.viteServer,
+		Workdir:    d.workdir,
+		EntryPoint: d.entryPoint,
 	}
 
 	var buf bytes.Buffer
-	err := d.htmlTemplate.Execute(&buf, data)
-	if err != nil {
+	if err := d.htmlTemplate.Execute(&buf, data); err != nil {
 		return nil, err
 	}
 

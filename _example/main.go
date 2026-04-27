@@ -48,7 +48,7 @@ func main() {
 	mux.Handle("/assets/", http.FileServerFS(os.DirFS(".")))
 
 	mux.HandleFunc("/", func() func(writer http.ResponseWriter, request *http.Request) {
-		indexHandler := page.NewAppHandler().Handler(ctx)
+		indexHandler := page.NewIndexHandler().Handler(ctx)
 		return func(w http.ResponseWriter, r *http.Request) {
 			if r.URL.Path == "/" || r.URL.Path == "/index.html" {
 				indexHandler(w, r)
@@ -58,6 +58,8 @@ func main() {
 			http.ServeFileFS(w, r, os.DirFS("./public"), filepath.Base(r.URL.Path))
 		}
 	}())
+
+	mux.HandleFunc("/app", page.NewAppHandler().Handler(ctx))
 
 	port := ":8080"
 	fmt.Printf("Server started at http://localhost%s\n", port)
@@ -113,6 +115,7 @@ const htmlDevTemplate = `
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vite + Go Integration</title>
+	<script>window.APP_PROPS={{ .AppProps }};</script>
     <script type="module">
         import RefreshRuntime from '{{ .ViteServer }}/@react-refresh'
         RefreshRuntime.injectIntoGlobalHook(window)
@@ -121,7 +124,7 @@ const htmlDevTemplate = `
         window.__vite_plugin_react_preamble_installed__ = true
     </script>
     <script type="module" src="{{ .ViteServer }}/@vite/client"></script>
-    <script type="module" src="{{ .ViteServer }}/{{ .EntryPointDir }}/{{ .EntryPoint }}"></script>
+    <script type="module" src="{{ .ViteServer }}/{{ .Workdir }}/{{ .EntryPoint }}"></script>
 </head>
 <body>
     <div id="root"></div>
