@@ -2,10 +2,76 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
 import entriesConfig from './entries.gen.json'
+import { spawn } from 'child_process'
 
-// https://vite.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    {
+      name: 'run-go-server',
+      configureServer(server) {
+        const projectRoot = path.resolve(__dirname, './')
+        let goProcess = spawn('go', ['run', './entrypoint/dev/main.go'], {
+          stdio: 'inherit',
+          cwd: projectRoot,
+          detached: true,
+        })
+        let isRestarting = false
+
+        const startGoServer = () => spawn('go', ['run', './entrypoint/dev/main.go'], {
+          stdio: 'inherit',
+          cwd: projectRoot,
+          detached: true,
+        })
+
+        const stopGoServer = (proc: any) => {
+          if (proc.pid) {
+            try {
+              process.kill(-proc.pid, 'SIGTERM')
+            } catch {
+              proc.kill()
+            }
+          } else {
+            proc.kill()
+          }
+        }
+
+        // server.watcher.add(projectRoot)
+        server.watcher.on('change', (file) => {
+          if (file.endsWith('.go') && !isRestarting) {
+            isRestarting = true
+
+            const startNew = () => {
+              goProcess = startGoServer()
+              isRestarting = false
+              server.ws.send({ type: 'full-reload' })
+            }
+
+            if (goProcess.exitCode !== null) {
+              startNew()
+            } else {
+              goProcess.once('exit', startNew)
+              stopGoServer(goProcess)
+            }
+          }
+        })
+
+        server.httpServer?.on('close', () => {
+          stopGoServer(goProcess)
+        })
+
+        process.on('exit', () => stopGoServer(goProcess))
+        process.on('SIGINT', () => {
+          stopGoServer(goProcess)
+          process.exit()
+        })
+        process.on('SIGTERM', () => {
+          stopGoServer(goProcess)
+          process.exit()
+        })
+      },
+    },
+  ],
   resolve: {
     alias: {
       '~': path.resolve(__dirname, "./"),
@@ -19,5 +85,8 @@ export default defineConfig({
   },
   server: {
     host: true,
+    watch: {
+      ignored: ['**/entries.gen.json'],
+    },
   },
 })
