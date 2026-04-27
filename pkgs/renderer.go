@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"html/template"
+	"reflect"
 )
 
 type renderCreatorContextKey struct{}
@@ -19,12 +20,12 @@ func WithRenderCreatorForDev(ctx context.Context, htmlTemplate, viteServer, work
 	return context.WithValue(ctx, renderCreatorContextKey{}, newDevRendererFunc(tmpl, viteServer, workdir)), nil
 }
 
-func RenderCreatorFromContext(ctx context.Context) (func(ctx context.Context, entryPoint string) (Renderer, error), error) {
+func RenderCreatorFromContext(ctx context.Context) (func(ctx context.Context, entryPoint string, props any) (Renderer, error), error) {
 	value := ctx.Value(renderCreatorContextKey{})
 	if value == nil {
 		return nil, errors.New("no render creator found in context")
 	}
-	renderCreator, ok := value.(func(ctx context.Context, entryPoint string) (Renderer, error))
+	renderCreator, ok := value.(func(ctx context.Context, entryPoint string, props any) (Renderer, error))
 	if !ok {
 		return nil, errors.New("invalid render creator type")
 	}
@@ -52,8 +53,8 @@ type devRendererData struct {
 	EntryPoint string
 }
 
-func newDevRendererFunc(htmlTemplate *template.Template, viteServer, workdir string) func(ctx context.Context, entryPoint string) (Renderer, error) {
-	return func(ctx context.Context, entryPoint string) (Renderer, error) {
+func newDevRendererFunc(htmlTemplate *template.Template, viteServer, workdir string) func(ctx context.Context, entryPoint string, props any) (Renderer, error) {
+	return func(ctx context.Context, entryPoint string, props any) (Renderer, error) {
 		generator, err := EntryPointGeneratorFromContext(ctx)
 		if err != nil {
 			return nil, err
@@ -63,6 +64,8 @@ func newDevRendererFunc(htmlTemplate *template.Template, viteServer, workdir str
 		if err != nil {
 			return nil, err
 		}
+
+		generator.RegisterPropsType(reflect.TypeOf(props))
 
 		return &devRenderer{
 			entryPoint:   entryPoint,

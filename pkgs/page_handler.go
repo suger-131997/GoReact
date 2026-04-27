@@ -29,7 +29,8 @@ func (h *PageHandler[T]) Handler(ctx context.Context) http.HandlerFunc {
 	if err != nil {
 		panic(err) // TODO: handle error properly
 	}
-	renderer, err := rendererCreator(ctx, h.EntryPoint)
+	var t T
+	renderer, err := rendererCreator(ctx, h.EntryPoint, t)
 	if err != nil {
 		panic(err) // TODO: handle error properly
 	}

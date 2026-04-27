@@ -1,7 +1,4 @@
-
-type IndexProps = {
-    name: string;
-};
+import type { IndexProps } from "~/types.gen.ts";
 
 const IndexPage = (p: IndexProps) => {
   return (

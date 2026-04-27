@@ -73,6 +73,10 @@ func main() {
 		log.Fatal(err)
 	}
 
+	if err := entryPointGenerator.GenerateTypeScriptPropsTypes(); err != nil {
+		log.Fatal(err)
+	}
+
 	log.Fatal(server.ListenAndServe())
 }
 
