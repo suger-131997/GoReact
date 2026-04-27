@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"goreact/_example/page"
+	"goreact/api"
+	"goreact/middleware"
 	"goreact/pkgs"
 	"log"
 	"net/http"
@@ -49,17 +51,32 @@ func main() {
 
 	mux.HandleFunc("/", func() func(writer http.ResponseWriter, request *http.Request) {
 		indexHandler := page.NewIndexHandler().Handler(ctx)
+		notFoundHandler := page.NewNotFoundHandler().Handler(ctx)
 		return func(w http.ResponseWriter, r *http.Request) {
 			if r.URL.Path == "/" || r.URL.Path == "/index.html" {
 				indexHandler(w, r)
 				return
 			}
 
-			http.ServeFileFS(w, r, os.DirFS("./public"), filepath.Base(r.URL.Path))
+			if _, err := os.Stat(filepath.Join("./public", filepath.Base(r.URL.Path))); err == nil {
+				http.ServeFileFS(w, r, os.DirFS("./public"), filepath.Base(r.URL.Path))
+				return
+			}
+
+			notFoundHandler(w, r)
 		}
 	}())
 
 	mux.HandleFunc("/app", page.NewAppHandler().Handler(ctx))
+	mux.HandleFunc("/about", page.NewAboutHandler().Handler(ctx))
+	mux.HandleFunc("/calendar", page.NewCalendarHandler().Handler(ctx))
+	mux.HandleFunc("/login", page.NewLoginHandler().Handler(ctx))
+	mux.Handle("/logged", middleware.AuthMiddleware(page.NewLoggedHandler().Handler(ctx)))
+	mux.HandleFunc("/todo", page.NewTodoHandler().Handler(ctx))
+	mux.HandleFunc("/users", page.NewUsersHandler().Handler(ctx))
+
+	mux.HandleFunc("POST /api/login", api.LoginHandler)
+	mux.HandleFunc("POST /api/logout", api.LogoutHandler)
 
 	port := ":8080"
 	fmt.Printf("Server started at http://localhost%s\n", port)
