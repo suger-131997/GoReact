@@ -2,6 +2,7 @@ package pkgs
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"os"
 	"path"
@@ -12,12 +13,15 @@ import (
 type EntryPointGenerator struct {
 	workdir  string
 	rootTmpl *template.Template
+
+	entryPoints map[string]struct{}
 }
 
 func NewEntryPointGenerator(workdir string) *EntryPointGenerator {
 	return &EntryPointGenerator{
-		workdir:  workdir,
-		rootTmpl: template.Must(template.New("root").Parse(entryPointTmpl)),
+		workdir:     workdir,
+		rootTmpl:    template.Must(template.New("root").Parse(entryPointTmpl)),
+		entryPoints: make(map[string]struct{}),
 	}
 }
 
@@ -40,6 +44,12 @@ func EntryPointGeneratorFromContext(ctx context.Context) (*EntryPointGenerator, 
 }
 
 func (r *EntryPointGenerator) Generate(entryPoint string) error {
+	if _, ok := r.entryPoints[entryPoint]; ok {
+		return errors.New("entry point already exists")
+	}
+
+	r.entryPoints[entryPoint] = struct{}{}
+
 	p := filepath.Join(r.workdir, entryPoint)
 
 	err := os.MkdirAll(path.Dir(p), os.ModePerm)
@@ -75,3 +85,23 @@ createRoot(document.getElementById('root')!).render(
   </StrictMode>
 )
 `
+
+func (r *EntryPointGenerator) GenerateEntryPointConfig() error {
+	m := make(map[string]string, len(r.entryPoints))
+
+	for entryPoint := range r.entryPoints {
+		m[entryPoint] = filepath.Join(r.workdir, entryPoint)
+	}
+
+	b, err := json.MarshalIndent(m, "", "  ")
+	if err != nil {
+		return err
+	}
+
+	err = os.WriteFile("entries.gen.json", b, 0644)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

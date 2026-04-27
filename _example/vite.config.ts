@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
+import entriesConfig from './entries.gen.json'
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -13,10 +14,7 @@ export default defineConfig({
   build: {
     manifest: true,
     rolldownOptions: {
-      input: {
-        "app": 'tmp/page/app.tsx',
-        "index": 'tmp/page/index.tsx',
-      },
+      input: entriesConfig,
     },
   },
   server: {

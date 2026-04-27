@@ -34,9 +34,9 @@ func main() {
 
 	ctx := context.Background()
 
-	g := pkgs.NewEntryPointGenerator(workdir)
+	entryPointGenerator := pkgs.NewEntryPointGenerator(workdir)
 
-	ctx = pkgs.WithEntryPointGenerator(ctx, g)
+	ctx = pkgs.WithEntryPointGenerator(ctx, entryPointGenerator)
 
 	ctx, err := pkgs.WithRenderCreatorForDev(ctx, htmlDevTemplate, viteServer, workdir)
 	if err != nil {
@@ -67,6 +67,10 @@ func main() {
 	server := &http.Server{
 		Addr:    "localhost:8080",
 		Handler: mux,
+	}
+
+	if err := entryPointGenerator.GenerateEntryPointConfig(); err != nil {
+		log.Fatal(err)
 	}
 
 	log.Fatal(server.ListenAndServe())
