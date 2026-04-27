@@ -13,7 +13,10 @@ export default defineConfig({
   build: {
     manifest: true,
     rolldownOptions: {
-      input: 'tmp/src/main.tsx',
+      input: {
+        "app": 'tmp/page/app.tsx',
+        "index": 'tmp/page/index.tsx',
+      },
     },
   },
   server: {
